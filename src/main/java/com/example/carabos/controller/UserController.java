@@ -3,45 +3,62 @@ package com.example.carabos.controller;
 import com.example.carabos.entity.User;
 import com.example.carabos.exceptions.UserNotFoundException;
 import com.example.carabos.repository.UserRepository;
+import org.springframework.hateoas.CollectionModel;
+import org.springframework.hateoas.EntityModel;
+import org.springframework.hateoas.IanaLinkRelations;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.stream.Collectors;
+
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 
 @RestController
 public class UserController {
 
     private final UserRepository repository;
 
-    public UserController(UserRepository repository) {
+    private final UserModelAssembler assembler;
+
+    public UserController(UserRepository repository, UserModelAssembler assembler) {
+        this.assembler = assembler;
         this.repository = repository;
     }
 
     @GetMapping("/users")
-    List<User> all() {
-        return repository.findAll();
+    CollectionModel<EntityModel<User>> all() {
+
+        List<EntityModel<User>> users = repository.findAll().stream()
+                .map(assembler::toModel)
+                .collect(Collectors.toList());
+
+        return CollectionModel.of(users,
+                linkTo(methodOn(UserController.class).all()).withSelfRel());
     }
 
     @PostMapping("/users")
-    User newUser(@RequestBody User newUser){
-        return repository.save(newUser);
+    ResponseEntity<?> newUser(@RequestBody User newUser) {
+        EntityModel<User> userEntityModel = assembler.toModel(repository.save(newUser));
+
+        return ResponseEntity
+                .created(userEntityModel.getRequiredLink(IanaLinkRelations.SELF).toUri())
+                .body(userEntityModel);
     }
 
     @GetMapping("/users/{id}")
-    User one(@PathVariable Long id) {
-
-        return repository.findById(id)
+    EntityModel<User> one(@PathVariable Long id) {
+        User user = repository.findById(id)
                 .orElseThrow(() -> new UserNotFoundException(id));
+
+        return assembler.toModel(user);
     }
 
-    /*@GetMapping("/users/{name}")
-    User findByName(@PathVariable String name){
-        return repository.findByName(name);
-    }*/
-
     @PutMapping("/users/{id}")
-    User replaceUser(@RequestBody User newUser, @PathVariable Long id) {
+    ResponseEntity<?> replaceUser(@RequestBody User newUser, @PathVariable Long id) {
 
-        return repository.findById(id)
+        User updateUser = repository.findById(id)
                 .map(user -> {
                     user.setName(newUser.getName());
                     user.setRole(newUser.getRole());
@@ -51,10 +68,19 @@ public class UserController {
                     newUser.setId(id);
                     return repository.save(newUser);
                 });
+
+        EntityModel<User> userEntityModel = assembler.toModel(updateUser);
+
+        return ResponseEntity
+                .created(userEntityModel.getRequiredLink(IanaLinkRelations.SELF).toUri())
+                .body(userEntityModel);
     }
 
     @DeleteMapping("/users/{id}")
-    void deleteUser(@PathVariable Long id) {
+    ResponseEntity<?> deleteUser(@PathVariable Long id) {
+
         repository.deleteById(id);
+
+        return ResponseEntity.noContent().build();
     }
 }
