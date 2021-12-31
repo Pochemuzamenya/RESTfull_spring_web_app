@@ -1,13 +1,11 @@
 package com.example.carabos.entity;
 
-import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import javax.persistence.Table;
+import javax.persistence.*;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "User_table")
@@ -19,8 +17,11 @@ public class User {
     private String name;
     private String login;
     private String password;
+    @Enumerated(EnumType.ORDINAL)
     private Role role;
     private String email;
+    @OneToMany(mappedBy = "customer", cascade = CascadeType.ALL)
+    private List<Order> order = new ArrayList<>();
 
     public User(String name, String login, String password, Role role, String email) {
         this.name = name;
