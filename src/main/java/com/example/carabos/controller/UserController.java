@@ -62,6 +62,8 @@ public class UserController {
                 .map(user -> {
                     user.setName(newUser.getName());
                     user.setRole(newUser.getRole());
+                    user.setEmail(newUser.getEmail());
+                    user.setPassword(newUser.getPassword());
                     return repository.save(user);
                 })
                 .orElseGet(() -> {

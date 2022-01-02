@@ -11,9 +11,14 @@ import javax.persistence.*;
 @Table(name = "Product_table")
 public class Product {
 
-    private @Id @GeneratedValue Long id;
+    private @Id @GeneratedValue(strategy = GenerationType.IDENTITY) Long id;
     private String title;
     private Float price;
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private Order order;
+
+    public Product(String title, Float price) {
+        this.title = title;
+        this.price = price;
+    }
 }

@@ -4,19 +4,24 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import javax.persistence.*;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 
 @Entity
 @Data
 @Table(name = "Order_table")
 @NoArgsConstructor
 public class Order {
-    private @Id @GeneratedValue Long id;
-    @ManyToOne(fetch = FetchType.LAZY)
-    private User customer;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+    private String customer;
     private Date date;
-    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL)
-    private List<Product> products = new ArrayList<>();
+    @Enumerated(EnumType.STRING)
+    private Status status;
+
+    public Order(User customer, Date date, Status status) {
+        this.customer = customer.getName();
+        this.date = date;
+        this.status = status;
+    }
 }

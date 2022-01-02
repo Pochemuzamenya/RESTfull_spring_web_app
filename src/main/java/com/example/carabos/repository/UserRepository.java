@@ -4,5 +4,6 @@ import com.example.carabos.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface UserRepository extends JpaRepository<User, Long> {
-    User findByName(String name);
+    /*@Query("select n from User_table where n.name = :name")
+    User findByName(String name);*/
 }
